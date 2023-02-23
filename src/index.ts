@@ -1,38 +1,37 @@
 import http from 'http';
 import url from 'url';
 import * as dotenv from 'dotenv';
-// Import { addCountry } from './countrys';
-
-console.log('hola pepe');
+import { calculator } from './calculator';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 4300; // Puerto definido en el package cuando ejecuto start:mon
+const PORT = process.env.PORT || '4300';
 
 const server = http.createServer((req, resp) => {
-  console.log('Server', req.method, PORT);
-  console.log(process.env.PORT);
-  // Console.log('Server', req.method, PORT);
-  if (!req.url) {
-    return new Error('algo');
+  if (req.method === 'GET') {
+    if (!req.url) {
+      server.emit('error', new Error('Error 404'));
+      return;
+    }
+
+    const { pathname } = url.parse(req.url);
+    if (pathname !== '/calculator') {
+      server.emit('error', new Error('codigo de error'));
+      return;
+    }
+
+    if (pathname === '/calculator') {
+      const URLParams = new URL(req.url, `http://localhost:'` + PORT);
+      const query = URLParams.searchParams;
+      const n1 = Number(query.get('a'));
+      const n2 = Number(query.get('b'));
+      const sum = n1 + n2;
+      const rest = n1 - n2;
+      const multiply = n1 * n2;
+      const divide = n1 / n2;
+      resp.write('Estos son tus datos de ' + pathname);
+    }
   }
-  const parseURL = url.parse(req.url);
-  const patname = parseURL.pathname;
-
-  // Con desesstructuración sería lo mismo que:
-  // const{pathname}=url.parse(req.url)
-
-  resp.write('Hello Server GET tu pathname es' + patname);
-  server.emit('error', new Error('Invalid URL'));
-
-  // Resp.write('Hello Server');
-  resp.end();
 });
-
-server.on('listening', () => {
-  console.log('Estoy escuchando en http://localhost/:' + PORT); // Informándonos como administradores
-});
-
-server.on('error', () => {});
 
 server.listen(PORT);
